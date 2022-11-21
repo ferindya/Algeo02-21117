@@ -19,9 +19,6 @@ os.chdir(path)
 
 output_path = ""
 
-def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
-    image = file_input.get()
-    folder = folder_input.get()
 
 def get_test_image(path_input):
     img = cv2.imread(path_input, cv2.IMREAD_UNCHANGED)
@@ -30,6 +27,10 @@ def get_test_image(path_input):
     dim = (width, height)
     resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
     cv2.imwrite("src/gui/training.png", resized)
+    
+def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
+    image = file_input.get()
+    folder = folder_input.get()
     get_test_image(image)
     test_image = tk.PhotoImage(file=ASSETS_PATH / "training.png")
     test_resized = resizeImage(test_image, 256, 256)
