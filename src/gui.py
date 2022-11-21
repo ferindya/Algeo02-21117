@@ -6,12 +6,15 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
-from extractor import *
 import cv2
 import time
+import timeit
+import PIL.ImageTk, PIL.Image
+from eigenface import *
+from extractor import *
 
 # Path to asset files for this GUI window.
-ASSETS_PATH = Path(__file__).resolve().parent / "assets"
+ASSETS_PATH = Path(__file__).resolve().parent / "gui"
 
 # Required in order to add data files to Windows executable
 path = getattr(sys, '_MEIPASS', os.getcwd())
@@ -20,22 +23,14 @@ os.chdir(path)
 output_path = ""
 
 
-def get_test_image(path_input):
-    img = cv2.imread(path_input, cv2.IMREAD_UNCHANGED)
-    width = 256
-    height = 256
-    dim = (width, height)
-    resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-    cv2.imwrite("src/gui/training.png", resized)
+def cv2ImgtoPhoto(img):
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
+    return photo
     
 def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
     image = file_input.get()
     folder = folder_input.get()
-    get_test_image(image)
-    test_image = tk.PhotoImage(file=ASSETS_PATH / "training.png")
-    test_resized = resizeImage(test_image, 256, 256)
-    new_test = canvas.itemconfig(image_1, image=test_resized)
-
     if not image:
         tk.messagebox.showerror(
             title="Empty Fields!", message="Please enter your image test!")
@@ -44,33 +39,50 @@ def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
         tk.messagebox.showerror(
             title="Empty Fields!", message="Please enter folder.")
         return
+    
+    img_Test = extractImg(image)
+    face_Test = getFaceImage(img_Test)
+    photo_Test = cv2ImgtoPhoto(img_Test)
+    new_test = canvas.itemconfig(image_1, image=photo_Test)
 
-    hasil, execution_time = main(folder, image)
+    isError = False
+    if face_Test is not None:
+        start = timeit.default_timer()
+        list_foto, data_set, list_Nama = data_extractor(folder)
+        if list_foto:
+            eigenfaces, mean, weight_Train = train(data_set)
+            closest_idx, dist = test(face_Test,eigenfaces,mean,weight_Train)
+            end = timeit.default_timer()
+            execution_time = end-start
+        else:
+            isError = True
+            error_msg = "Tidak ada wajah pada dataset!"
+    else :
+        isError = True
+        error_msg = "Wajah tidak ditemukan pada gambar test!"
+    
+    if not isError:
+        result = cv2ImgtoPhoto(list_foto[closest_idx])
+        new = canvas.itemconfig(image_2, image=result)
 
-    if hasil is not None:
-        result = tk.PhotoImage(file=ASSETS_PATH / "result.png")
-        result_resized = resizeImage(result, 256, 256)
-        new = canvas.itemconfig(image_2, image=result_resized)
-
-        isFound_text_new = canvas.itemconfig(isFound_text, text="Gambar Ditemukan!")
+        isFound_text_new = canvas.itemconfig(isFound_text, text=f"Gambar Ditemukan! Dist: {dist}")
         exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
-
         canvas.tag_raise(isFound_text_new)
         canvas.tag_raise(exec_time_text_new)
         canvas.tag_raise(new)
-    else:
+    else :
         default = tk.PhotoImage(file = ASSETS_PATH / "image_1.png")
         default_resized = resizeImage(default, 256, 256)
         new = canvas.itemconfig(image_2, image=default_resized)
 
-        isFound_text_new = canvas.itemconfig(isFound_text, text="File Tidak Ditemukan")
+        isFound_text_new = canvas.itemconfig(isFound_text, text=error_msg)
         exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: 0.000 s")
-
         canvas.tag_raise(isFound_text_new)
         canvas.tag_raise(exec_time_text_new)
         canvas.tag_raise(new)
     canvas.tag_raise(new_test)
     return
+
 def select_path():
     global output_path
 
@@ -263,7 +275,7 @@ exec_time_text = canvas.create_text(
             font=("Aril-BoldMT", int(13.0)), anchor="w")
 
 isFound_text = canvas.create_text(
-            755.0, 390.0, text=" ", fill="#515486",
+            700.0, 390.0, text=" ", fill="#515486",
             font=("Aril-BoldMT", int(13.0)), anchor="w")
 
 generate_btn_img = tk.PhotoImage(file=ASSETS_PATH / "generate.png")

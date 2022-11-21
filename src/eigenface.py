@@ -4,28 +4,13 @@ from eigen import *
 from img_utils import *
 from vector_util import *
 
-def_size = 256
-
-def getFaceImage(img):
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_alt.xml')
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    face = face_cascade.detectMultiScale(img,1.1,4)
-    if (len(face) == 0):
-        return None
-    for i in range(len(face)):
-        x,y,h,w = face[i]
-        if (h < 20 or w < 20):
-            continue
-        img = img[y:y+h,x:x+w]
-        img = image_resize(img,width=def_size,height=def_size)
-        break
-    return img
+def_size = 100
 
 def calcEigenFaces(listfoto, k):
     # Matriks rata-rata foto
     mean = np.zeros(def_size)
-    for img in range(len(listfoto)):
-        mean = mean + img
+    for i in range(len(listfoto)):
+        mean = mean + listfoto[i]
     mean = mean/len(listfoto)
 
     # Membuat matriks foto hasil normalisasi
@@ -61,24 +46,20 @@ def train(imgList):
     grayImgList = []
     # konversi tiap foto menjadi grayscale dan hanya mengambil bagian wajah
     for i in range(len(imgList)):
-        tmp = getFaceImage(imgList[i])
-        if tmp is not None:
-            grayImgList.append(tmp)
+        grayImgList.append(cv2.cvtColor(imgList[i], cv2.COLOR_BGR2GRAY))
     # mendapatkan eigenface, foto rata-rata, dan matriks berat
     eigenFaces, mean, weight = calcEigenFaces(grayImgList,(int)(0.75*len(grayImgList)))
     return eigenFaces, mean, weight
 
 def test(img, eigenFaces, mean, weightTrainingData):
-    reducedImg = getFaceImage(img) - mean
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    reducedImg = img - mean
     weightTest = np.empty((eigenFaces.shape[1],1))
-    vectorImg = np.reshape(reducedImg, (def_size**2,1))
     for i in range(eigenFaces.shape[1]):
-        weightTest[i,0] = projection(vectorImg,eigenFaces[:,i])[1]
+        weightTest[i,0] = projection(reducedImg.flatten(),eigenFaces[:,i])[1]
     distMin = 9999999999
     idx_min = -1
     for i in range(weightTrainingData.shape[1]):
-        print(weightTest.shape)
-        print(weightTrainingData[:,i].shape)
         dist = magnitude(weightTest[:,0]-weightTrainingData[:,i])
         if (dist < distMin):
             distMin = dist

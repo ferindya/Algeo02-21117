@@ -17,7 +17,6 @@ def displayImgList(imgList, isRandom, cmap='gray'):
         plt.imshow(imgList[idx],cmap=cmap)
     plt.show()
 
-
 def displayImg(img,cmap='gray'):
     plt.imshow(img,cmap=cmap)
     plt.show()

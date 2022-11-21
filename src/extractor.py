@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 from img_utils import *
 
-def extractImg(image_path, max_length = 500):
+def extractImg(image_path, max_length = 256):
     img = cv2.imread(image_path)
     if (img.shape[0] >= img.shape[1] and img.shape[0] > max_length):
         img = image_resize(img, height=max_length)
@@ -12,13 +12,18 @@ def extractImg(image_path, max_length = 500):
         img = image_resize(img, height=max_length)
     return img
 
-def batch_extractor(images_path):
+def data_extractor(images_path):
     print("Loading test images...")
-    result = []
+    imgList= []
+    faceimgList = []
     filename = []
     files = [os.path.join(images_path, p) for p in sorted(os.listdir(images_path))]
     for f in tqdm(files):
         name = f.split("\\")[-1].lower()
-        result.append(extractImg(f))
-        filename.append(name)
-    return result, filename
+        img = extractImg(f)
+        face = getFaceImage(img)
+        if face is not None :
+            imgList.append(img)
+            faceimgList.append(face)
+            filename.append(name)
+    return imgList, faceimgList, filename
