@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import os
-from tqdm import tqdm
 from img_utils import *
 
 def extractImg(image_path, max_length = 256):
@@ -18,7 +17,7 @@ def data_extractor(images_path):
     faceimgList = []
     filename = []
     files = [os.path.join(images_path, p) for p in sorted(os.listdir(images_path))]
-    for f in tqdm(files):
+    for f in files:
         name = f.split("\\")[-1].lower()
         img = extractImg(f)
         face = getFaceImage(img)

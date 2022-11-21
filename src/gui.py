@@ -1,6 +1,4 @@
 # import webbrowser
-from py_compile import main
-import re
 import sys
 import os
 import tkinter as tk
