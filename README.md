@@ -1,28 +1,11 @@
 # Algeo02-21117
 
-# Mobilita
-
-Tugas Besar Alstrukdat IF2110
-
-With the COVID-19 pandemic, Mobita's parents' business has decreased income. After the PPKM was eased, Mobita wanted to help his parents
-earn a living as a courier. Your job is to help Mobita
-developed an app that would help him track orders, navigate maps, pick up
-and unload goods.
-
-Mobilita is CLI (Command Line Interface) Game that we made using c language. This game includes a lot of data structure and also Abstract Data Types that we made ourself. Some of them are Stack, Queue, Linked list, and many more. The purpose of the game is to deliver all of the item in TODO list and get the fastest time and also lot of money.
-
-```
-Install Requirements :  
-```
-pip install -r requirements.txt
-```
-
-Cara run :  
-Pastikan terminal berada di root project  
-```
-py src\gui.py
-```
-
+Pengenalan wajah (Face Recognition) adalah teknologi biometrik yang bisa dipakai untuk
+mengidentifikasi wajah seseorang untuk berbagai kepentingan khususnya keamanan.
+Program pengenalan wajah melibatkan kumpulan citra wajah yang sudah disimpan pada
+database lalu berdasarkan kumpulan citra wajah tersebut, program dapat mempelajari bentuk
+wajah lalu mencocokkan antara kumpulan citra wajah yang sudah dipelajari dengan citra
+yang akan diidentifikasi.
 ## Features Done
 
 - Eigen
@@ -39,3 +22,15 @@ py src\gui.py
 | Maggie Zeta Rosida S           | 13521117 |                                                                        
 | Ferindya Aulia Berlianty       | 13521161 |               
 | Muhammad Habibi Husni          | 13521169 | 
+
+```
+Install Requirements :  
+```
+pip install -r requirements.txt
+```
+
+Cara run :  
+Pastikan terminal berada di root project  
+```
+py src\gui.py
+```
