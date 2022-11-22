@@ -20,7 +20,7 @@ def data_extractor(images_path):
     for f in files:
         name = f.split("\\")[-1].lower()
         img = extractImg(f)
-        face = getFaceImage(img)
+        face = getFaceImage(img)[0]
         if face is not None :
             imgList.append(img)
             faceimgList.append(face)

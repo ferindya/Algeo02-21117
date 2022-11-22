@@ -30,9 +30,7 @@ def calcEigenFaces(listfoto, k):
     eigenVectors = eigenVectors[:,idx]
 
     # Mendapatkan eigenface sebanyak K
-    eigenFaces = np.empty((def_size*def_size,k))
-    for i in range(k):
-        eigenFaces[:,[i]] = matfoto @ eigenVectors[:,[i]]
+    eigenFaces = matfoto @ eigenVectors[:,0:k]
 
     # Mendapatkan matriks berat untuk masing-masing foto
     weight = np.empty((k,matfoto.shape[1]))
@@ -48,7 +46,7 @@ def train(imgList):
     for i in range(len(imgList)):
         grayImgList.append(cv2.cvtColor(imgList[i], cv2.COLOR_BGR2GRAY))
     # mendapatkan eigenface, foto rata-rata, dan matriks berat
-    eigenFaces, mean, weight = calcEigenFaces(grayImgList,(int)(0.75*len(grayImgList)))
+    eigenFaces, mean, weight = calcEigenFaces(grayImgList,min(len(grayImgList)-1,100))
     return eigenFaces, mean, weight
 
 def test(img, eigenFaces, mean, weightTrainingData):

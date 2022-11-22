@@ -20,41 +20,35 @@ os.chdir(path)
 
 output_path = ""
 
+eigenfaces = mean = weight_Train = list_Nama = list_foto =  None
 
 def cv2ImgtoPhoto(img):
     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
     photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
     return photo
     
-def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
+def test_button_do(image_1, image_2, exec_time_text, isFound_text):
     image = file_input.get()
-    folder = folder_input.get()
     if not image:
         tk.messagebox.showerror(
             title="Empty Fields!", message="Please enter your image test!")
         return
-    if not folder:
+    if not list_foto:
         tk.messagebox.showerror(
-            title="Empty Fields!", message="Please enter folder.")
+            title="Error!", message="No training data!")
         return
     
     img_Test = extractImg(image)
-    face_Test = getFaceImage(img_Test)
-    photo_Test = cv2ImgtoPhoto(img_Test)
-    new_test = canvas.itemconfig(image_1, image=photo_Test)
-
+    face_Test = getFaceImage(img_Test)[0]
     isError = False
+
     if face_Test is not None:
+        photo_Test = cv2ImgtoPhoto(img_Test)
+        new_test = canvas.itemconfig(image_1, image=photo_Test)
         start = timeit.default_timer()
-        list_foto, data_set, list_Nama = data_extractor(folder)
-        if list_foto:
-            eigenfaces, mean, weight_Train = train(data_set)
-            closest_idx, dist = test(face_Test,eigenfaces,mean,weight_Train)
-            end = timeit.default_timer()
-            execution_time = end-start
-        else:
-            isError = True
-            error_msg = "Tidak ada wajah pada dataset!"
+        closest_idx, dist = test(face_Test,eigenfaces,mean,weight_Train)
+        end = timeit.default_timer()
+        execution_time = end-start
     else :
         isError = True
         error_msg = "Wajah tidak ditemukan pada gambar test!"
@@ -68,17 +62,40 @@ def btn_clicked(image_1, image_2, exec_time_text, isFound_text):
         canvas.tag_raise(isFound_text_new)
         canvas.tag_raise(exec_time_text_new)
         canvas.tag_raise(new)
+        canvas.tag_raise(new_test)
     else :
-        default = tk.PhotoImage(file = ASSETS_PATH / "image_1.png")
-        default_resized = resizeImage(default, 256, 256)
-        new = canvas.itemconfig(image_2, image=default_resized)
+        tk.messagebox.showerror(
+            title="Error!", message=error_msg)
+        return
 
-        isFound_text_new = canvas.itemconfig(isFound_text, text=error_msg)
-        exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: 0.000 s")
+    return
+
+def train_button_do(exec_time_text, isFound_text):
+    global eigenfaces, mean, weight_Train, list_Nama, list_foto
+    folder = folder_input.get()
+    if not folder:
+        tk.messagebox.showerror(
+            title="Empty Fields!", message="Please enter folder.")
+        return
+    isError = False
+    start = timeit.default_timer()
+    list_foto, data_set, list_Nama = data_extractor(folder)
+    if list_foto:
+        eigenfaces, mean, weight_Train = train(data_set)
+        end = timeit.default_timer()
+        execution_time = end-start
+    else:
+        isError = True
+        error_msg = "Tidak ada wajah pada dataset!"
+
+    if not isError:
+        isFound_text_new = canvas.itemconfig(isFound_text, text=f"Training selesai!")
+        exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
         canvas.tag_raise(isFound_text_new)
         canvas.tag_raise(exec_time_text_new)
-        canvas.tag_raise(new)
-    canvas.tag_raise(new_test)
+    else :
+        tk.messagebox.showerror(
+            title="Error!", message=error_msg)
     return
 
 def select_path():
@@ -119,7 +136,7 @@ def resizeImage(img, newWidth, newHeight):
 
 def open_cam():
     TIMER = int(5)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 256)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 256)
     while True:
@@ -146,7 +163,6 @@ def open_cam():
                 cv2.imwrite(r"..\test/dataset_test/barbara palvin40_900.jpg", img)
         break
     cap.release()
-    file_input.insert(0, r"..\test/dataset_test/barbara palvin40_900.jpg")
     cv2.destroyAllWindows()
 
 
@@ -272,27 +288,21 @@ exec_time_text = canvas.create_text(
         717.0, 418.0, text=f"Execution Time: 0.000 s", fill="#515486",
             font=("Aril-BoldMT", int(13.0)), anchor="w")
 
-isFound_text = canvas.create_text(
+info_text = canvas.create_text(
             700.0, 390.0, text=" ", fill="#515486",
             font=("Aril-BoldMT", int(13.0)), anchor="w")
-
-generate_btn_img = tk.PhotoImage(file=ASSETS_PATH / "generate.png")
-generate_btn = tk.Button(
-    image=generate_btn_img, borderwidth=0, highlightthickness=0,
-    command=lambda: btn_clicked(image_1, image_2, exec_time_text, isFound_text), relief="flat")
-generate_btn.place(x=716, y=301, width=180, height=55)
 
 train_btn_img = tk.PhotoImage(file=ASSETS_PATH / "train.png")
 train_btn = tk.Button(
     image=train_btn_img, borderwidth=0, highlightthickness=0,
-    command=lambda: btn_clicked(image_1, image_2, exec_time_text, isFound_text), relief="flat")
-generate_btn.place(x=616, y=351, width=180, height=55)
+    command=lambda: train_button_do(exec_time_text, info_text), relief="flat")
+train_btn.place(x=616, y=301, width=127, height=40)
 
 test_btn_img = tk.PhotoImage(file=ASSETS_PATH / "test.png")
 test_btn = tk.Button(
     image=test_btn_img, borderwidth=0, highlightthickness=0,
-    command=lambda: btn_clicked(image_1, image_2, exec_time_text, isFound_text), relief="flat")
-generate_btn.place(x=816, y=351, width=180, height=55)
+    command=lambda: test_button_do(image_1, image_2, exec_time_text, info_text), relief="flat")
+test_btn.place(x=816, y=301, width=127, height=40)
 
 window.resizable(False, False)
 window.mainloop()

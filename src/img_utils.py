@@ -32,6 +32,6 @@ def getFaceImage(img,size=100):
         cntFace += 1
         break
     if (cntFace == 0):
-        return None
+        return None, None, None, None, None
     else:
-        return img
+        return img, x, y, h, w
