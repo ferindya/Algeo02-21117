@@ -24,10 +24,11 @@ eigenfaces = mean = weight_Train = list_Nama = list_foto =  None
 
 def cv2ImgtoPhoto(img):
     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-    photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
+    photo1 = PIL.Image.fromarray(img)
+    photo = PIL.ImageTk.PhotoImage(image=photo1)
     return photo
     
-def test_button_do(image_1, image_2, exec_time_text, isFound_text):
+def test_button_do():
     image = file_input.get()
     if not image:
         tk.messagebox.showerror(
@@ -43,8 +44,7 @@ def test_button_do(image_1, image_2, exec_time_text, isFound_text):
     isError = False
 
     if face_Test is not None:
-        photo_Test = cv2ImgtoPhoto(img_Test)
-        new_test = canvas.itemconfig(image_1, image=photo_Test)
+       
         start = timeit.default_timer()
         closest_idx, dist = test(face_Test,eigenfaces,mean,weight_Train)
         end = timeit.default_timer()
@@ -55,14 +55,13 @@ def test_button_do(image_1, image_2, exec_time_text, isFound_text):
     
     if not isError:
         result = cv2ImgtoPhoto(list_foto[closest_idx])
-        new = canvas.itemconfig(image_2, image=result)
-
-        isFound_text_new = canvas.itemconfig(isFound_text, text=f"Gambar Ditemukan! Dist: {dist}")
-        exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
-        canvas.tag_raise(isFound_text_new)
-        canvas.tag_raise(exec_time_text_new)
-        canvas.tag_raise(new)
-        canvas.tag_raise(new_test)
+        photo_Test = cv2ImgtoPhoto(img_Test)
+        img1 = canvas.itemconfig(image_1, image=photo_Test)
+        img2 = canvas.itemconfig(image_2, image=result)
+        canvas.itemconfig(info_text, text=f"Gambar Ditemukan! Dist: {dist}")
+        canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
+        canvas.tag_raise(img1)
+        canvas.tag_raise(img2)
     else :
         tk.messagebox.showerror(
             title="Error!", message=error_msg)
@@ -70,7 +69,7 @@ def test_button_do(image_1, image_2, exec_time_text, isFound_text):
 
     return
 
-def train_button_do(exec_time_text, isFound_text):
+def train_button_do():
     global eigenfaces, mean, weight_Train, list_Nama, list_foto
     folder = folder_input.get()
     if not folder:
@@ -89,10 +88,8 @@ def train_button_do(exec_time_text, isFound_text):
         error_msg = "Tidak ada wajah pada dataset!"
 
     if not isError:
-        isFound_text_new = canvas.itemconfig(isFound_text, text=f"Training selesai!")
-        exec_time_text_new = canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
-        canvas.tag_raise(isFound_text_new)
-        canvas.tag_raise(exec_time_text_new)
+        canvas.itemconfig(info_text, text=f"Training selesai!")
+        canvas.itemconfig(exec_time_text, text=f"Execution Time: {execution_time:.3f} s")
     else :
         tk.messagebox.showerror(
             title="Error!", message=error_msg)
@@ -135,33 +132,36 @@ def resizeImage(img, newWidth, newHeight):
     return newPhotoImage
 
 def open_cam():
-    TIMER = int(5)
-    cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+    if eigenfaces is None :
+        tk.messagebox.showerror(
+            title="Error!", message="Masukkan data train terlebih dahulu!")
+        return
+    global canvas
+    for i in range(10):
+        testcap = cv2.VideoCapture(i)
+        ret, img = testcap.read()
+        if ret:
+            testcap.release()
+            break
+    cap = cv2.VideoCapture(i)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 256)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 256)
     while True:
         ret, img = cap.read()
+        face, x, y, w, h = getFaceImage(img)
+        if face is not None:
+            cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+            closest_idx, dist = test(face,eigenfaces,mean,weight_Train)
+            result = cv2ImgtoPhoto(list_foto[closest_idx])
+            photo_Test = cv2ImgtoPhoto(face)
+            tmp1 = canvas.itemconfig(image_1, image=photo_Test)
+            tmp2 = canvas.itemconfig(image_2, image=result)
+            canvas.itemconfig(info_text, text=f"Dist: {dist}")
+            canvas.tag_raise(tmp1)
+            canvas.tag_raise(tmp2)
         cv2.imshow('a', img)
-        prev = time.time()
-        while TIMER >= 0:
-            ret, img = cap.read()
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(img, str(TIMER),
-                        (200, 250), font,
-                        7, (0, 255, 255),
-                        4, cv2.LINE_AA)
-            cv2.imshow('a', img)
-            cv2.waitKey(125)
-            cur = time.time()
-            if cur-prev >= 1:
-                prev = cur
-                TIMER = TIMER-1
-            else:
-                ret, img = cap.read()
-                cv2.imshow('a', img)
-                cv2.waitKey(2000)
-                cv2.imwrite(r"..\test/dataset_test/barbara palvin40_900.jpg", img)
-        break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
     cap.release()
     cv2.destroyAllWindows()
 
@@ -295,13 +295,13 @@ info_text = canvas.create_text(
 train_btn_img = tk.PhotoImage(file=ASSETS_PATH / "train.png")
 train_btn = tk.Button(
     image=train_btn_img, borderwidth=0, highlightthickness=0,
-    command=lambda: train_button_do(exec_time_text, info_text), relief="flat")
+    command= train_button_do, relief="flat")
 train_btn.place(x=616, y=301, width=127, height=40)
 
 test_btn_img = tk.PhotoImage(file=ASSETS_PATH / "test.png")
 test_btn = tk.Button(
     image=test_btn_img, borderwidth=0, highlightthickness=0,
-    command=lambda: test_button_do(image_1, image_2, exec_time_text, info_text), relief="flat")
+    command=test_button_do, relief="flat")
 test_btn.place(x=816, y=301, width=127, height=40)
 
 window.resizable(False, False)
