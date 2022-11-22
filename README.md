@@ -8,12 +8,10 @@ wajah lalu mencocokkan antara kumpulan citra wajah yang sudah dipelajari dengan 
 yang akan diidentifikasi.
 ## Features Done
 
-- Eigen
+- Face detecting from image
 - Eigenface
-- Extractor
 - GUI
-- Image Utils
-- Vector Utils
+- Face detecting from camera
 
 ## Member List:
 
@@ -23,7 +21,7 @@ yang akan diidentifikasi.
 | Ferindya Aulia Berlianty       | 13521161 |               
 | Muhammad Habibi Husni          | 13521169 | 
 
-```
+
 Install Requirements :  
 ```
 pip install -r requirements.txt
